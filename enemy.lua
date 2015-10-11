@@ -10,8 +10,18 @@ enemies.nextSpawn = love.timer.getTime() + 1
 function enemies.init()
     -- load images
     for enemyTypeName, enemyType in pairs(enemyTypes) do
-        for i=1,enemyType.imageAmount do
-            enemyType.images[i] = love.graphics.newImage(imageFolder..enemyTypeName..i..'.png')
+        enemyType.images = {}
+        for i = 1, enemyType.imageAmount do
+            local possibleImage = ''
+            if enemyType.imageAmount == 1 then
+                possibleImage = imageFolder..'enemy_'..enemyTypeName..'.png'
+            else
+                possibleImage = imageFolder..'enemy_'..enemyTypeName..i..'.png'
+            end
+            print(possibleImage)
+            if love.filesystem.exists(possibleImage) then 
+                enemyType.images[i] = love.graphics.newImage(possibleImage)
+            end
         end
     end
 end
@@ -19,18 +29,9 @@ end
 
 function enemies.spawn(type)
     local entity = setmetatable({}, {__index = enemyTypes[type]})
-    if entity.init then entity:init() end
     
     entity.type = type
-
-     -- random start
-    entity.position = {
-        x = love.math.random(0, love.window.getWidth()),
-        y = 0
-    }
-
-    -- set random image
-    entity.imageIndex = love.math.random(1, #entity.images)
+    if entity.init then entity:init() end
     
     table.insert(enemies.entities, entity)
 end
@@ -39,18 +40,19 @@ end
 function enemies.update(dt)
     -- spawn new enemies
     if love.timer.getTime() > enemies.nextSpawn then
-        enemies.spawn('weakAsteroid')
+        spawnEnemyTypes = {'asteroid', 'weakAsteroid'}
+        enemies.spawn(spawnEnemyTypes[love.math.random(1, 2)])
         enemies.nextSpawn = love.timer.getTime() + 2 + love.math.random()
     end
 
     -- update positions
     for i, entity in ipairs(enemies.entities) do
-        enemyTypes[entity.type].move(entity, dt)
+        entity:move(dt)
     end
 
     -- additional update if applicable
     for i, entity in ipairs(enemies.entities) do
-        if entity.update then entity:update() end
+        if entity.update then entity:update(dt) end
     end
 
     -- remove objects which are out of window
@@ -65,7 +67,7 @@ end
 
 function enemies.draw()
     for _, entity in ipairs(enemies.entities) do
-        enemyTypes[entity.type].draw(entity)
+        entity:draw()
     end
 end
 
@@ -75,123 +77,91 @@ end
 enemyTypes = {}
 
 
--- enemy type asteroid
+-- abstract anemy
 
-enemyTypes.asteroid = {}
+enemyTypes.abstract = {}
 
-enemyTypes.asteroid.remove = false
+enemyTypes.abstract.type = nil
 
-enemyTypes.asteroid.radius      = nil
-enemyTypes.asteroid.radiusRange = {min = 50, max = 100}
+enemyTypes.abstract.remove = false
 
-enemyTypes.asteroid.imageIndex  = nil
-enemyTypes.asteroid.imageAmount = 4
-enemyTypes.asteroid.images      = {}
+enemyTypes.abstract.imageIndex  = 0
+enemyTypes.abstract.imageAmount = 1
+enemyTypes.abstract.images      = {}
 
-enemyTypes.asteroid.rotationSpeed       = nil
-enemyTypes.asteroid.rotationSpeedRange  = {min = 0.3, max = 0.5}
-    
-enemyTypes.asteroid.speed       = nil
-enemyTypes.asteroid.speedRange  = {min = 150, max = 220}
+enemyTypes.abstract.position = {x = 0, y = 0}
+enemyTypes.abstract.speed    = {x = 0, y = 0}
 
-enemyTypes.asteroid.collisionRadius = nil
+enemyTypes.abstract.radius                = 0
+enemyTypes.abstract.collisionRadius       = 0
+enemyTypes.abstract.collisionRadiusFactor = 1
 
-enemyTypes.asteroid.collisionDamage = 30
-
-enemyTypes.asteroid.health = 50
+enemyTypes.abstract.collisionDamage = 0
+enemyTypes.abstract.health          = nil
 
 
-function enemyTypes.asteroid.init(self)
-    self.radius             = love.math.random(self.radiusRange.min, self.radiusRange.max)
-    self.speed              = love.math.random(self.speedRange.min, self.speedRange.max)
-    self.rotationSpeed      = self.rotationSpeedRange.min + love.math.random() * (self.rotationSpeedRange.max - self.rotationSpeedRange.min)
-    self.collisionRadius    = self.radius * 0.8
+function enemyTypes.abstract.init(self)
+    -- set random image
+    self.imageIndex = love.math.random(1, #self.images)
+
+    -- size
+    local imageWith   = self.images[self.imageIndex]:getWidth()
+    local imageHeight = self.images[self.imageIndex]:getHeight()
+    self.radius = (imageWith > imageHeight) and imageWith or imageHeight
+
+    -- random start
+    self.position = {
+        x = love.math.random(0, love.window.getWidth()),
+        y = 0 - self.radius / 2
+    }
+
+    self.collisionRadius = self.radius * self.collisionRadiusFactor
 end
 
 
-function enemyTypes.asteroid.move(self, dt)
-    self.position.y = self.position.y + self.speed * dt
-end
-
-
-function enemyTypes.asteroid.draw(self)
-    local image = self.images[self.imageIndex]
-    love.graphics.setColor({255, 255, 255})
-    love.graphics.draw(image, self.position.x, self.position.y, self.rotationSpeed * love.timer.getTime(),
-                       self.radius * 2 / image:getWidth(), self.radius * 2 / image:getHeight(), image:getWidth() / 2, image:getHeight() / 2)
-    if debugMode then
-        love.graphics.setColor({255, 0, 0})
-        love.graphics.circle('line', self.position.x, self.position.y, self.radius, 20)
-        love.graphics.print(self.health, self.position.x, self.position.y)
-    end
-end
-
-
--- enemy type weak asteroid
-
-enemyTypes.weakAsteroid = {}
-
-enemyTypes.weakAsteroid.remove = false
-
-enemyTypes.weakAsteroid.radius      = nil
-enemyTypes.weakAsteroid.radiusRange = {min = 50, max = 100}
-
-enemyTypes.weakAsteroid.imageIndex  = nil
-enemyTypes.weakAsteroid.imageAmount = 4
-enemyTypes.weakAsteroid.images      = {}
-
-enemyTypes.weakAsteroid.rotationSpeed       = nil
-enemyTypes.weakAsteroid.rotationSpeedRange  = {min = 0.3, max = 0.5}
-    
-enemyTypes.weakAsteroid.speed       = nil
-enemyTypes.weakAsteroid.speedRange  = {min = 150, max = 220}
-
-enemyTypes.weakAsteroid.collisionRadius = nil
-
-enemyTypes.weakAsteroid.collisionDamage = 30
-
-enemyTypes.weakAsteroid.health = 50
-
-
-function enemyTypes.weakAsteroid.init(self)
-    self.radius             = love.math.random(self.radiusRange.min, self.radiusRange.max)
-    self.speed              = love.math.random(self.speedRange.min, self.speedRange.max)
-    self.rotationSpeed      = self.rotationSpeedRange.min + love.math.random() * (self.rotationSpeedRange.max - self.rotationSpeedRange.min)
-    self.collisionRadius    = self.radius * 0.8
-end
-
-
-function enemyTypes.weakAsteroid.update(self)
-    for _, entity in ipairs(projectiles.entities) do
-        if (entity.team == 'friendly' and circlesCollide(self.position.x, self.position.y, self.collisionRadius, entity.collisionCenter.x, entity.collisionCenter.y, entity.collisionRadius)) then
+function enemyTypes.abstract.update(self, dt)
+    for i = #projectiles.entities, 1, -1 do
+        local entity = projectiles.entities[i]
+        if (entity.team == 'friendly' and circlesCollide(self.position.x, self.position.y, self.collisionRadius, entity.position.x, entity.position.y, entity.collisionRadius)) then
             self:hit(entity.damage)
-            entity.remove = true
+            table.remove(projectiles.entities, i)
         end
     end
 end
 
 
-function enemyTypes.weakAsteroid.hit(self, damage)
-    self.health = self.health - damage
-    if self.health <= 0 then
-        self.remove = true
+function enemyTypes.abstract.hit(self, damage)
+    if self.health ~= nil then
+        self.health = self.health - damage
+        if self.health <= 0 then
+            self:die()
+        end
     end
 end
 
 
-function enemyTypes.weakAsteroid.move(self, dt)
-    self.position.y = self.position.y + self.speed * dt
+function enemyTypes.abstract.die(self, damage)
+    self.remove = true
 end
 
 
-function enemyTypes.weakAsteroid.draw(self)
+function enemyTypes.abstract.move(self, dt)
+    self.position.x = self.position.x + self.speed.x * dt
+    self.position.y = self.position.y + self.speed.y * dt
+end
+
+
+function enemyTypes.abstract.draw(self)
     local image = self.images[self.imageIndex]
+    
     love.graphics.setColor({255, 255, 255})
     love.graphics.draw(image, self.position.x, self.position.y, self.rotationSpeed * love.timer.getTime(),
                        self.radius * 2 / image:getWidth(), self.radius * 2 / image:getHeight(), image:getWidth() / 2, image:getHeight() / 2)
+   
     if debugMode then
         love.graphics.setColor({255, 0, 0})
         love.graphics.circle('line', self.position.x, self.position.y, self.radius, 20)
-        love.graphics.print(self.health, self.position.x, self.position.y)
+        love.graphics.print(self.type, self.position.x - 50, self.position.y - 10)
+        love.graphics.print((self.health and self.health or 'nil'), self.position.x - 10, self.position.y + 10)
     end
 end

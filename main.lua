@@ -1,6 +1,8 @@
 require 'helper'
 require 'ship'
 require 'enemy'
+require 'enemyTypes_asteroid'
+--require 'enemyTypes.weakAsteroid'
 require 'projectile'
 
 
@@ -12,6 +14,7 @@ debugMode = false
 function love.load()
     ship:init()
     enemies.init()
+    projectiles.init()
 end
 
 

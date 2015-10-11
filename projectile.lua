@@ -5,6 +5,17 @@ projectiles = {}
 projectiles.entities = {}
 
 
+function projectiles.init()
+    -- load images
+    for projectileTypeName, projectileType in pairs(projectileTypes) do
+        local possibleImage = imageFolder..'projectile_'..projectileTypeName..'.png'
+        if love.filesystem.exists(possibleImage) then 
+            projectileType.image = love.graphics.newImage(possibleImage)
+        end
+    end
+end
+
+
 function projectiles.shoot(type, x, y)
     local entity = setmetatable({}, {__index = projectileTypes[type]})
     if entity.init then entity:init() end
@@ -21,14 +32,14 @@ end
 
 
 function projectiles.update(dt)
-    --update positions
+    -- update positions
     for i, entity in ipairs(projectiles.entities) do
-        entity.position.y = entity.position.y + entity.speed * dt * (entity.team == 'friendly' and -1 or 1)
+        entity:move(dt)
     end
 
     -- additional update if applicable
     for i, entity in ipairs(projectiles.entities) do
-        if entity.update then entity:update() end
+        if entity.update then entity:update(dt) end
     end
 
     --remove objects which are out of window
@@ -44,15 +55,7 @@ end
 
 function projectiles.draw()
     for _, entity in ipairs(projectiles.entities) do
-       love.graphics.setColor(entity.color)
-       if entity.shape == 'rectangle' then
-            love.graphics.rectangle('fill', entity.position.x, entity.position.y, entity.size.x, entity.size.y)
-       end
-
-        if debugMode then
-            love.graphics.setColor({255, 0, 0})
-            love.graphics.circle('line', entity.collisionCenter.x, entity.collisionCenter.y, entity.collisionRadius, 20)
-        end
+        entity:draw()
     end
 end
 
@@ -62,29 +65,59 @@ end
 projectileTypes = {}
 
 
+-- abstract projectile
+
+projectileTypes.abstract = {}
+
+projectileTypes.abstract.team   = nil
+projectileTypes.abstract.damage = 0
+
+projectileTypes.abstract.image = nil
+
+projectileTypes.abstract.position = {x = 0, y = 0}
+projectileTypes.abstract.speed    = {x = 0, y = 0}
+
+projectileTypes.abstract.size = {x = 0, y = 0}
+
+projectileTypes.abstract.collisionRadius       = nil
+projectileTypes.abstract.collisionRadiusFactor = 1
+
+
+function projectileTypes.abstract.init(self)
+    -- size
+    self.size = {x = self.image:getWidth(), y = self.image:getHeight()}
+    self.radius = (self.size.x > self.size.y) and self.size.x or self.size.y
+
+    self.collisionCenter = {x = self.position.x + self.size.x / 2, y = self.position.y + self.size.y / 2}
+
+    self.collisionRadius = self.radius * self.collisionRadiusFactor
+end
+
+
+function projectileTypes.abstract.move(self, dt)
+    self.position.x = self.position.x + self.speed.x * dt
+    self.position.y = self.position.y + self.speed.y * dt * (self.team == 'friendly' and -1 or 1)
+end
+
+
+function projectileTypes.abstract.draw(self)
+    love.graphics.setColor({255, 255, 255})
+    love.graphics.draw(self.image, self.position.x, self.position.y, 0, 1, 1, self.size.x / 2, self.size.y / 2)
+
+    if debugMode then
+        love.graphics.setColor({255, 0, 0})
+        love.graphics.circle('line', self.position.x, self.position.y, self.collisionRadius, 20)
+    end
+end
+
+
 -- projectile type shot
 
-projectileTypes.shot = {}
-
-projectileTypes.shot.remove = false 
+projectileTypes.shot = setmetatable({}, {__index = projectileTypes.abstract})
 
 projectileTypes.shot.team   = 'friendly'
 projectileTypes.shot.damage = 10
 
-projectileTypes.shot.speed  = 300
+projectileTypes.shot.speed = {x = 0, y = 300}
 
-projectileTypes.shot.collisionRadius = nil
-projectileTypes.shot.collisionCenter = {x = 0, y = 0}
-
-projectileTypes.shot.shape  = 'rectangle'
-projectileTypes.shot.size   = {x = 3, y = 8}
-projectileTypes.shot.color  = {200, 255, 200}
-
-
-function projectileTypes.shot.init(self)
-    self.collisionRadius = self.size.y
-end
-
-function projectileTypes.shot.update(self)
-    self.collisionCenter = {x = self.position.x + self.size.x / 2, y = self.position.y + self.size.y / 2}
-end
+projectileTypes.shot.collisionRadiusFactor = 0.4

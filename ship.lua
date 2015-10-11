@@ -1,7 +1,7 @@
 ship = {}
 
-ship.size       = {x = nil, y = nil}
-ship.position   = {x = nil, y = nil}
+ship.size       = {x = 0, y = 0}
+ship.position   = {x = 0, y = 0}
     
 ship.velocity               = {x = 0, y = 0}
 ship.minimalVelocity        = 10
@@ -9,7 +9,7 @@ ship.acceleration           = 1300
 ship.maxSpeed               = 800
 ship.decellerationFactor    = 3
 ship.frictionFactor         = 4
-ship.collisionRadius        = nil
+ship.collisionRadius        = 0
 
 ship.collisionInvicibilityTime  = 0.8
 ship.health                     = 100
