@@ -2,7 +2,7 @@ require 'helper'
 require 'ship'
 require 'enemy'
 require 'enemyTypes_asteroid'
---require 'enemyTypes.weakAsteroid'
+require 'enemyTypes_glider'
 require 'projectile'
 
 

@@ -8,8 +8,8 @@ projectiles.entities = {}
 function projectiles.init()
     -- load images
     for projectileTypeName, projectileType in pairs(projectileTypes) do
-        local possibleImage = imageFolder..'projectile_'..projectileTypeName..'.png'
-        if love.filesystem.exists(possibleImage) then 
+        local possibleImage = imageFolder..'projectile/'..projectileTypeName..'.png'
+        if love.filesystem.exists(possibleImage) then
             projectileType.image = love.graphics.newImage(possibleImage)
         end
     end
@@ -28,6 +28,8 @@ function projectiles.shoot(type, x, y)
     }
     
     table.insert(projectiles.entities, entity)
+
+    return entity
 end
 
 
@@ -111,13 +113,23 @@ function projectileTypes.abstract.draw(self)
 end
 
 
--- projectile type shot
+--  friendly shot
 
-projectileTypes.shot = setmetatable({}, {__index = projectileTypes.abstract})
+projectileTypes.friendlyShot = setmetatable({}, {__index = projectileTypes.abstract})
 
-projectileTypes.shot.team   = 'friendly'
-projectileTypes.shot.damage = 10
+projectileTypes.friendlyShot.team   = 'friendly'
+projectileTypes.friendlyShot.damage = 10
 
-projectileTypes.shot.speed = {x = 0, y = 300}
+projectileTypes.friendlyShot.speed = {x = 0, y = 500}
 
-projectileTypes.shot.collisionRadiusFactor = 0.4
+projectileTypes.friendlyShot.collisionRadiusFactor = 0.2
+
+
+-- hostile shot
+
+projectileTypes.hostileShot = setmetatable({}, {__index = projectileTypes.friendlyShot})
+
+projectileTypes.hostileShot.team   = 'hostile'
+projectileTypes.hostileShot.damage = 20
+
+projectileTypes.hostileShot.speed = {x = 0, y = 300}

@@ -81,6 +81,13 @@ function ship:collide()
             self.velocity.x = self.maxSpeed / 2 * (self.position.x >= entity.position.x and 1 or -1)
         end
     end
+    for i = #projectiles.entities, 1, -1 do
+        local entity = projectiles.entities[i]
+        if (entity.team == 'hostile' and circlesCollide(self.position.x, self.position.y, self.collisionRadius, entity.position.x, entity.position.y, entity.collisionRadius)) then
+            self:hit(entity.damage)
+            table.remove(projectiles.entities, i)
+        end
+    end
 end
 
 
@@ -94,14 +101,19 @@ function ship:hit(damage, invincibilityTime)
         end
 
         if self.health <= 0 then
-            self.health = 100
+            self:die()
         end
     end
 end
 
 
+function ship:die()
+    self.health = 100
+end
+
+
 function ship:shoot()
-    projectiles.shoot('shot', self.position.x, self.position.y - self.size.y / 2)
+    projectiles.shoot('friendlyShot', self.position.x, self.position.y - self.size.y / 2)
 end
 
 
