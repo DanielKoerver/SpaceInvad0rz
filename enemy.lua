@@ -23,6 +23,8 @@ function enemies.init()
             end
         end
     end
+
+    sound.load(soundFolder..'enemyHit.wav', 'enemyHit', 'static')
 end
 
 
@@ -102,7 +104,9 @@ enemyTypes.abstract.lastHit      = 0
 enemyTypes.abstract.hitFlashTime = 0.05
 
 enemyTypes.abstract.shootfrequency  = 0
-enemyTypes.abstract.sprojectileType = nil
+enemyTypes.abstract.projectileType = nil
+
+enemyTypes.abstract.soundVolue = 0.7
 
 
 function enemyTypes.abstract.init(self)
@@ -147,6 +151,9 @@ function enemyTypes.abstract.hit(self, damage)
     if self.health ~= nil then
         self.health = self.health - damage
         self.lastHit = love.timer.getTime()
+
+        sound.play('enemyHit', enemyTypes.abstract.soundVolume)
+
         if self.health <= 0 then
             self:die()
         end
