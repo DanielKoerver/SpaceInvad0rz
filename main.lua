@@ -1,4 +1,5 @@
 require 'helper'
+require 'sound'
 require 'ship'
 require 'enemy'
 require 'enemyTypes_asteroid'
@@ -7,6 +8,7 @@ require 'projectile'
 
 
 imageFolder = 'assets/images/'
+soundFolder = 'assets/sound/'
 
 debugMode = false
 
@@ -33,6 +35,7 @@ function love.update(dt)
     enemies.update(dt)
     projectiles.update(dt)
     ship:update(dt)
+    sound.clean()
 end
 
 

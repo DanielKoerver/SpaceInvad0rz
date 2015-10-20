@@ -18,12 +18,15 @@ ship.hitFlashTime               = 0.05
 ship.invincibilityEnd           = 0
 ship.isInvincible               = false
 
+ship.soundVolume = 1
+
 
 function ship:init()
     shipImage               = love.graphics.newImage(imageFolder..'ship.png')
     self.size               = {x = shipImage:getWidth(), y = shipImage:getHeight()}
     self.position           = {x = love.window.getWidth() / 2, y = love.window.getHeight() - ship.size.y / 2 - 50}
     self.collisionRadius    = distance(0, 0, ship.size.x, ship.size.y) / 2 * 0.7
+    sound.load(soundFolder..'shipHit.wav', 'shipHit', 'static')
 end;
 
 
@@ -95,6 +98,8 @@ function ship:hit(damage, invincibilityTime)
     if (not self.isInvincible) then
         self.health = self.health - damage
         self.lastHit = love.timer.getTime()
+
+        sound.play('shipHit', ship.soundVolume)
         
         if invincibilityTime ~= nil then
             self.invincibilityEnd = love.timer.getTime() + invincibilityTime

@@ -6,11 +6,17 @@ projectiles.entities = {}
 
 
 function projectiles.init()
-    -- load images
     for projectileTypeName, projectileType in pairs(projectileTypes) do
+        -- load images
         local possibleImage = imageFolder..'projectile/'..projectileTypeName..'.png'
         if love.filesystem.exists(possibleImage) then
             projectileType.image = love.graphics.newImage(possibleImage)
+        end
+
+        -- load sounds
+        local possibleSound = soundFolder..'projectile/'..projectileTypeName..'.wav'
+        if love.filesystem.exists(possibleSound) then
+            sound.load(possibleSound, 'projectile'..projectileTypeName, 'static')
         end
     end
 end
@@ -26,6 +32,8 @@ function projectiles.shoot(type, x, y)
         x = x,
         y = y
     }
+
+    sound.play('projectile'..type, projectileTypes[type].soundVolume)
     
     table.insert(projectiles.entities, entity)
 
@@ -74,7 +82,9 @@ projectileTypes.abstract = {}
 projectileTypes.abstract.team   = nil
 projectileTypes.abstract.damage = 0
 
-projectileTypes.abstract.image = nil
+projectileTypes.abstract.image       = nil
+projectileTypes.abstract.sound       = nil
+projectileTypes.abstract.soundVolume = 0.7
 
 projectileTypes.abstract.position = {x = 0, y = 0}
 projectileTypes.abstract.speed    = {x = 0, y = 0}
