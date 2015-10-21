@@ -22,6 +22,11 @@ function projectiles.init()
 end
 
 
+function projectiles.restart()
+    projectiles.entities = {}
+end
+
+
 function projectiles.shoot(type, x, y)
     local entity = setmetatable({}, {__index = projectileTypes[type]})
     if entity.init then entity:init() end
@@ -84,7 +89,7 @@ projectileTypes.abstract.damage = 0
 
 projectileTypes.abstract.image       = nil
 projectileTypes.abstract.sound       = nil
-projectileTypes.abstract.soundVolume = 0.7
+projectileTypes.abstract.soundVolume = 0.4
 
 projectileTypes.abstract.position = {x = 0, y = 0}
 projectileTypes.abstract.speed    = {x = 0, y = 0}
@@ -141,5 +146,7 @@ projectileTypes.hostileShot = setmetatable({}, {__index = projectileTypes.friend
 
 projectileTypes.hostileShot.team   = 'hostile'
 projectileTypes.hostileShot.damage = 20
+
+projectileTypes.hostileShot.soundVolume = 0.5
 
 projectileTypes.hostileShot.speed = {x = 0, y = 300}

@@ -12,11 +12,14 @@ ship.frictionFactor         = 4
 ship.collisionRadius        = 0
 
 ship.collisionInvicibilityTime  = 0.8
-ship.health                     = 100
+ship.maxHealth                  = 100
+ship.health                     = nil
 ship.lastHit                    = 0
 ship.hitFlashTime               = 0.05
 ship.invincibilityEnd           = 0
 ship.isInvincible               = false
+
+ship.score = 0
 
 ship.soundVolume = 1
 
@@ -26,7 +29,19 @@ function ship:init()
     self.size               = {x = shipImage:getWidth(), y = shipImage:getHeight()}
     self.position           = {x = love.window.getWidth() / 2, y = love.window.getHeight() - ship.size.y / 2 - 50}
     self.collisionRadius    = distance(0, 0, ship.size.x, ship.size.y) / 2 * 0.7
-    sound.load(soundFolder..'shipHit.wav', 'shipHit', 'static')
+
+    sound.load(soundFolder..'hits/shipHit.wav', 'shipHit', 'static')
+
+    self.health = self.maxHealth
+end;
+
+
+function ship:restart()
+    self.size     = {x = shipImage:getWidth(), y = shipImage:getHeight()}
+    self.position = {x = love.window.getWidth() / 2, y = love.window.getHeight() - ship.size.y / 2 - 50}
+    self.velocity = {x = 0, y = 0}
+    self.health   = self.maxHealth
+    ship.score    = 0
 end;
 
 
@@ -35,6 +50,11 @@ function ship:update(dt)
     self:collide()
 
     self.isInvincible = (self.invincibilityEnd > love.timer.getTime())
+
+    -- die
+    if self.health <= 0 then
+        self:die()
+    end
 end
 
 
@@ -78,12 +98,15 @@ end
 
 
 function ship:collide()
+    -- collide with enemies
     for _, entity in ipairs(enemies.entities) do
         if (circlesCollide(self.position.x, self.position.y, self.collisionRadius, entity.position.x, entity.position.y, entity.radius)) then
             self:hit(entity.collisionDamage, ship.collisionInvicibilityTime)
             self.velocity.x = self.maxSpeed / 2 * (self.position.x >= entity.position.x and 1 or -1)
         end
     end
+
+    -- collide with projectiles
     for i = #projectiles.entities, 1, -1 do
         local entity = projectiles.entities[i]
         if (entity.team == 'hostile' and circlesCollide(self.position.x, self.position.y, self.collisionRadius, entity.position.x, entity.position.y, entity.collisionRadius)) then
@@ -104,21 +127,26 @@ function ship:hit(damage, invincibilityTime)
         if invincibilityTime ~= nil then
             self.invincibilityEnd = love.timer.getTime() + invincibilityTime
         end
-
-        if self.health <= 0 then
-            self:die()
-        end
     end
 end
 
 
 function ship:die()
-    self.health = 100
+    if godMode then
+        self.health = 100
+    else
+        gameHasEnded = true
+    end
 end
 
 
 function ship:shoot()
     projectiles.shoot('friendlyShot', self.position.x, self.position.y - self.size.y / 2)
+end
+
+
+function ship:addScore(score)
+    self.score = self.score + score
 end
 
 
@@ -133,10 +161,6 @@ function ship:draw()
     -- draw ship
     love.graphics.draw(shipImage, self.position.x + self.velocity.x / self.maxSpeed * 20, self.position.y,
                        0, (1.0 - math.abs(self.velocity.x) / self.maxSpeed * 0.15), 1, self.size.x / 2, self.size.y / 2)
-
-    --draw health
-    love.graphics.setColor({255, 255, 255})
-    love.graphics.print('Health: '..self.health, 20, 20)
 
     if debugMode then
         love.graphics.setColor({255, 0, 0})

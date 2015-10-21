@@ -1,5 +1,3 @@
--- sound
-
 sound = {}
 
 sound.entities = {}

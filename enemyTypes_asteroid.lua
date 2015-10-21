@@ -14,6 +14,9 @@ enemyTypes.asteroid.collisionRadiusFactor = 0.8
 enemyTypes.asteroid.collisionDamage = 30
 enemyTypes.asteroid.health          = nil
 
+enemyTypes.asteroid.hitSound       = 'enemyInvincibleHit'
+enemyTypes.asteroid.hitSoundVolume = 0.6
+
 
 function enemyTypes.asteroid.init(self)
     enemyTypes.abstract.init(self)
@@ -55,3 +58,8 @@ end
 enemyTypes.weakAsteroid = setmetatable({}, {__index = enemyTypes.asteroid})
 
 enemyTypes.weakAsteroid.health = 50
+
+enemyTypes.weakAsteroid.score = 10
+
+enemyTypes.weakAsteroid.hitSound      = enemyTypes.abstract.hitSound
+enemyTypes.weakAsteroid.hitSoundVolue = enemyTypes.abstract.hitSoundVolue 

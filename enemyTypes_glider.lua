@@ -6,6 +6,8 @@ enemyTypes.glider.direction = 1
 
 enemyTypes.glider.health = 30
 
+enemyTypes.glider.score = 20
+
 enemyTypes.glider.shootfrequency  = 1
 enemyTypes.glider.projectileType = 'hostileShot'
 

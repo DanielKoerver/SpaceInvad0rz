@@ -8,8 +8,8 @@ enemies.nextSpawn = love.timer.getTime() + 1
 
 
 function enemies.init()
-    -- load images
     for enemyTypeName, enemyType in pairs(enemyTypes) do
+        -- load images
         enemyType.images = {}
         for i = 1, enemyType.imageAmount do
             local possibleImage = ''
@@ -22,9 +22,16 @@ function enemies.init()
                 enemyType.images[i] = love.graphics.newImage(possibleImage)
             end
         end
-    end
 
-    sound.load(soundFolder..'enemyHit.wav', 'enemyHit', 'static')
+        -- load sounds
+        sound.load(soundFolder..'hits/'..enemyType.hitSound..'.wav', enemyType.hitSound, 'static')
+    end
+end
+
+
+function enemies.restart()
+    enemies.entities = {}
+    enemies.nextSpawn = love.timer.getTime() + 1
 end
 
 
@@ -106,7 +113,10 @@ enemyTypes.abstract.hitFlashTime = 0.05
 enemyTypes.abstract.shootfrequency  = 0
 enemyTypes.abstract.projectileType = nil
 
-enemyTypes.abstract.soundVolue = 0.7
+enemyTypes.abstract.score = 0
+
+enemyTypes.abstract.hitSound      = 'enemyHit'
+enemyTypes.abstract.hitSoundVolue = 0.7
 
 
 function enemyTypes.abstract.init(self)
@@ -131,6 +141,7 @@ end
 
 
 function enemyTypes.abstract.update(self, dt)
+    -- collision
     for i = #projectiles.entities, 1, -1 do
         local entity = projectiles.entities[i]
         if (circlesCollide(self.position.x, self.position.y, self.collisionRadius, entity.position.x, entity.position.y, entity.collisionRadius)) then
@@ -140,23 +151,25 @@ function enemyTypes.abstract.update(self, dt)
             table.remove(projectiles.entities, i)
         end
     end
+    
+    -- shoot
     if self.shootfrequency > 0 and self.lastShot + self.shootfrequency < love.timer.getTime() then
         self.lastShot = love.timer.getTime()
         self:shoot()
+    end
+
+    -- die
+    if self.health ~= nil and self.health <= 0 then
+        self:die()
     end
 end
 
 
 function enemyTypes.abstract.hit(self, damage)
+    sound.play(self.hitSound, self.hitSoundVolume)
     if self.health ~= nil then
         self.health = self.health - damage
         self.lastHit = love.timer.getTime()
-
-        sound.play('enemyHit', enemyTypes.abstract.soundVolume)
-
-        if self.health <= 0 then
-            self:die()
-        end
     end
 end
 
@@ -169,8 +182,9 @@ function enemyTypes.abstract.shoot(self)
 end
 
 
-function enemyTypes.abstract.die(self, damage)
+function enemyTypes.abstract.die(self)
     self.remove = true
+    ship:addScore(self.score)
 end
 
 
