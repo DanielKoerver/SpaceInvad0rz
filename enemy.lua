@@ -48,9 +48,8 @@ end
 function enemies.update(dt)
     -- spawn new enemies
     if love.timer.getTime() > enemies.nextSpawn then
-        spawnEnemyTypes = {'asteroid', 'weakAsteroid', 'glider'}
+        spawnEnemyTypes = {'asteroid', 'weakAsteroid', 'glider', 'kamikaze'}
         enemies.spawn(spawnEnemyTypes[love.math.random(1, #spawnEnemyTypes)])
-        --enemies.spawn('glider')
         enemies.nextSpawn = love.timer.getTime() + 2 + love.math.random()
     end
 
@@ -115,8 +114,8 @@ enemyTypes.abstract.projectileType = nil
 
 enemyTypes.abstract.score = 0
 
-enemyTypes.abstract.hitSound      = 'enemyHit'
-enemyTypes.abstract.hitSoundVolue = 0.7
+enemyTypes.abstract.hitSound       = 'enemyHit'
+enemyTypes.abstract.hitSoundVolume = 0.7
 
 
 function enemyTypes.abstract.init(self)
@@ -174,17 +173,22 @@ function enemyTypes.abstract.hit(self, damage)
 end
 
 
-function enemyTypes.abstract.shoot(self)
-    if self.projectileType ~= nil then
-        local projectile = projectiles.shoot(self.projectileType, self.position.x, self.position.y + self.collisionRadius)
-        projectile.position.y = projectile.position.y + projectile.collisionRadius
-    end
+function enemyTypes.abstract.collideWithShip(self)
+    self:die()
 end
 
 
 function enemyTypes.abstract.die(self)
     self.remove = true
     ship:addScore(self.score)
+end
+
+
+function enemyTypes.abstract.shoot(self)
+    if self.projectileType ~= nil then
+        local projectile = projectiles.shoot(self.projectileType, self.position.x, self.position.y + self.collisionRadius)
+        projectile.position.y = projectile.position.y + projectile.collisionRadius
+    end
 end
 
 

@@ -99,10 +99,11 @@ end
 
 function ship:collide()
     -- collide with enemies
-    for _, entity in ipairs(enemies.entities) do
+    for i, entity in ipairs(enemies.entities) do
         if (circlesCollide(self.position.x, self.position.y, self.collisionRadius, entity.position.x, entity.position.y, entity.radius)) then
             self:hit(entity.collisionDamage, ship.collisionInvicibilityTime)
             self.velocity.x = self.maxSpeed / 2 * (self.position.x >= entity.position.x and 1 or -1)
+            enemies.entities[i]:collideWithShip()
         end
     end
 

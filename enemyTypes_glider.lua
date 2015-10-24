@@ -26,13 +26,43 @@ function enemyTypes.glider.move(self, dt)
     end
 
     -- toggle left and right
-    if self.position.x + self.size.x / 2 + 50 >= love.window.getWidth() then
+    if self.position.x + self.size.x / 2 + 10 >= love.window.getWidth() then
         self.direction = -1
     end
-    if self.position.x - self.size.x / 2 - 50 <= 0 then
+    if self.position.x - self.size.x / 2 - 10 <= 0 then
         self.direction = 1
     end
 
     self.position.x = self.position.x + self.speed.x * self.direction * dt
+    self.position.y = self.position.y + self.speed.y * dt
+end
+
+
+-- kamikaze
+
+enemyTypes.kamikaze = setmetatable({}, {__index = enemyTypes.abstract})
+
+enemyTypes.kamikaze.direction = 1
+
+enemyTypes.kamikaze.collisionDamage = 50
+enemyTypes.kamikaze.health = 50
+
+enemyTypes.kamikaze.score = 40
+
+
+function enemyTypes.kamikaze.init(self)
+    enemyTypes.abstract.init(self)
+    self.speed = {x = 150, y = 250}
+end
+
+
+function enemyTypes.kamikaze.move(self, dt)
+
+    -- follow the player
+    self.direction = (self.position.x > ship.position.x and -1 or 1)
+    if math.abs(self.position.x - ship.position.x) >= 10 then
+        self.position.x = self.position.x + self.speed.x * self.direction * dt
+    end
+
     self.position.y = self.position.y + self.speed.y * dt
 end

@@ -31,6 +31,11 @@ function enemyTypes.asteroid.init(self)
 end
 
 
+function enemyTypes.asteroid.collideWithShip(self)
+    self.speed.x = 80 * (ship.position.x >= self.position.x and -1 or 1)
+end
+
+
 function enemyTypes.asteroid.draw(self)
     local image = self.images[self.imageIndex]
     local rotation = (self.rotationSpeed ~= nil and self.rotationSpeed * love.timer.getTime() or 0)
